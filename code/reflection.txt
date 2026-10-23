@@ -1,7 +1,9 @@
-Write your reflection here.
+This assignment extended Assignment 04's lineage rule with a new idea: grain, or what one row stands for. The history stays at one row per person per week throughout Step 1 and Step 2, which is why add_clean_columns, add_date_parts, and add_roster could keep following copy-add-return, but summarize_employees, hours_grid, and pay_by_month each build a brand new table at a different grain (one row per employee, one row per employee-and-week-wide, one row per month) and are exempt from "add a column, don't change the shape" even though they still must never mutate the history they were built from.
 
-See reflection.md for what makes a good reflection — be specific, use the
-terminology from this assignment (grain, long vs. wide, vectorized .str methods,
-coerce, NaT, pd.to_datetime format, .dt, concat, ignore_index, group by, named
-aggregation, reset_index, pivot_table, fill_value, melt, lineage), and make it
-actionable.
+Vectorized .str methods replaced apply entirely this time. clean_employee_id chains .str.strip(), .str.upper(), .str[1:], and .str.zfill(3) to turn "e4" into "E004" without ever writing a loop or a per-value function, and parse_pay_date taught me why pd.to_datetime needs an explicit format=: the quarter mixed US dates like "8/14/2026" with ISO dates like "2026-09-25", and a single format can only read one of them, so I ran two passes with errors="coerce" (which turns anything unreadable into NaT instead of raising) and combined them with us.fillna(iso).
+
+The group-by and pivot/melt round trip were the two ideas that clicked hardest. summarize_employees used named aggregation (.agg(total_hours=("hours_worked", "sum"))) and a lambda for counting overtime weeks, then reset_index() to pull the grouped keys back out of the index. The real insight came from missed_weeks: pivoting the history into hours_grid with fill_value=0 created a cell for every employee and every week, including weeks nobody worked, and melting that grid back to long form surfaced rows that never existed in the original export. An absence isn't a row in any source file; it only becomes visible once the pivot invents the cell and the melt gives it back as data.
+
+I hit a repeated, avoidable problem this time: pasting multi-line heredocs into the terminal kept getting corrupted mid-transmission, silently merging old and new code or truncating files. I got faster at catching it by running cat on the file immediately after every write, before ever running pytest, which saved time versus the Assignment 04 situation where a corrupted file produced a wall of confusing test failures before I found the real cause. I also learned that ruff's static lineage checker can false-positive on `grid.columns.name = None` (misreading it as overwriting a column literally named "name"), and that rename_axis(columns=None) does the same job without tripping the checker.
+
+AI disclosure: I used Claude to help write history.py, summarize.py, reshape.py, and payroll_report_app.py, debug terminal paste-corruption and a ruff false-positive, and write this reflection, based on the assignment's docstrings and README walkthrough.
