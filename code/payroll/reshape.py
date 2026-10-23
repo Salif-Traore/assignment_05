@@ -12,8 +12,7 @@ def hours_grid(history: pd.DataFrame) -> pd.DataFrame:
         aggfunc="sum",
         fill_value=0,
     )
-    grid = grid.reset_index()
-    grid.columns.name = None
+    grid = grid.reset_index().rename_axis(columns=None)
     return grid.sort_values("employee_id").reset_index(drop=True)
 
 
@@ -38,6 +37,5 @@ def pay_by_month(history: pd.DataFrame) -> pd.DataFrame:
         aggfunc="sum",
         fill_value=0.0,
     )
-    wide = wide.reset_index()
-    wide.columns.name = None
+    wide = wide.reset_index().rename_axis(columns=None)
     return wide.sort_values("month").reset_index(drop=True)
